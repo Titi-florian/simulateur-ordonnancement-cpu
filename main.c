@@ -5,7 +5,45 @@ typedef struct {
     int id;
     int temps_arrivee;
     int duree_exec;
+    int temps_fin;
+    int temps_rotation;
 } Processus;
+
+// Fonction pour trier les processus par ordre d'arrivée croissant
+void trierParArrivee(Processus p[], int n) {
+    Processus temp;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (p[j].temps_arrivee > p[j + 1].temps_arrivee) {
+                temp = p[j];
+                p[j] = p[j + 1];
+                p[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Implémentation de l'algorithme FIFO
+void executerFIFO(Processus p[], int n) {
+    trierParArrivee(p, n);
+
+    int temps_actuel = 0;
+
+    printf("\n--- EXECUTION DE L'ALGORITHME FIFO ---\n");
+    for (int i = 0; i < n; i++) {
+        // Si le CPU est inactif jusqu'à l'arrivée du processus
+        if (temps_actuel < p[i].temps_arrivee) {
+            temps_actuel = p[i].temps_arrivee;
+        }
+
+        temps_actuel += p[i].duree_exec;
+        p[i].temps_fin = temps_actuel;
+        p[i].temps_rotation = p[i].temps_fin - p[i].temps_arrivee;
+
+        printf("Processus P%d -> Temps d'arrivee: %d | Execution: %d | Temps de fin: %d | Temps de rotation: %d\n",
+               p[i].id, p[i].temps_arrivee, p[i].duree_exec, p[i].temps_fin, p[i].temps_rotation);
+    }
+}
 
 int main() {
     int n, quantum;
@@ -30,11 +68,8 @@ int main() {
         scanf("%d", &p[i].duree_exec);
     }
 
-    printf("\n--- Recapitulatif des donnees saisies ---\n");
-    printf("Quantum global : %d\n", quantum);
-    for (int i = 0; i < n; i++) {
-        printf("P%d -> Arrivee: %d | Execution: %d\n", p[i].id, p[i].temps_arrivee, p[i].duree_exec);
-    }
+    // Appel de l'algorithme FIFO
+    executerFIFO(p, n);
 
     return 0;
 }
