@@ -11,7 +11,7 @@ int main() {
     int n, quantum;
 
     printf("--- SIMULATEUR D'ORDONNANCEMENT ---\n");
-    
+
     printf("Entrez le nombre de processus : ");
     scanf("%d", &n);
 
