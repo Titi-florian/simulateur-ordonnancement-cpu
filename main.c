@@ -86,6 +86,52 @@ void executerSGF(Processus p[], int n) {
     }
 }
 
+// Implémentation de l'algorithme SRP (Shortest Remaining Time First / Préemptif)
+void executerSRP(Processus p[], int n) {
+    int temps_restant[n];
+    for (int i = 0; i < n; i++) {
+        temps_restant[i] = p[i].duree_exec;
+    }
+
+    int temps_actuel = 0;
+    int completes = 0;
+
+    printf("\n--- EXECUTION DE L'ALGORITHME SRP (Preemptif) ---\n");
+    while (completes < n) {
+        int idx_court = -1;
+        int min_restant = 99999;
+
+        // Trouver le processus arrivé non terminé avec le plus petit temps restant
+        for (int i = 0; i < n; i++) {
+            if (temps_restant[i] > 0 && p[i].temps_arrivee <= temps_actuel) {
+                if (temps_restant[i] < min_restant) {
+                    min_restant = temps_restant[i];
+                    idx_court = i;
+                }
+            }
+        }
+
+        // Si aucun processus n'est disponible, on avance le temps
+        if (idx_court == -1) {
+            temps_actuel++;
+        } else {
+            // On exécute d'une unité de temps
+            temps_restant[idx_court]--;
+            temps_actuel++;
+
+            // Si le processus vient de se terminer
+            if (temps_restant[idx_court] == 0) {
+                completes++;
+                p[idx_court].temps_fin = temps_actuel;
+                p[idx_court].temps_rotation = p[idx_court].temps_fin - p[idx_court].temps_arrivee;
+
+                printf("Processus P%d -> Arrivee: %d | Execution initiale: %d | Fin: %d | Rotation: %d\n",
+                       p[idx_court].id, p[idx_court].temps_arrivee, p[idx_court].duree_exec, p[idx_court].temps_fin, p[idx_court].temps_rotation);
+            }
+        }
+    }
+}
+
 int main() {
     int n, quantum;
 
@@ -112,6 +158,7 @@ int main() {
     // Exécution des algorithmes
     executerFIFO(p, n);
     executerSGF(p, n);
+    executerSRP(p, n);
 
     return 0;
 }
