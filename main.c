@@ -9,7 +9,7 @@ typedef struct {
     int temps_rotation;
 } Processus;
 
-// Fonction pour trier les processus par ordre d'arrivée croissant
+// Fonction pour trier les processus par ordre d'arrivée croissant (pour le FIFO)
 void trierParArrivee(Processus p[], int n) {
     Processus temp;
     for (int i = 0; i < n - 1; i++) {
@@ -25,23 +25,64 @@ void trierParArrivee(Processus p[], int n) {
 
 // Implémentation de l'algorithme FIFO
 void executerFIFO(Processus p[], int n) {
-    trierParArrivee(p, n);
+    // On fait une copie locale ou on trie pour le FIFO
+    Processus copie[n];
+    for(int i=0; i<n; i++) copie[i] = p[i];
+
+    trierParArrivee(copie, n);
 
     int temps_actuel = 0;
 
     printf("\n--- EXECUTION DE L'ALGORITHME FIFO ---\n");
     for (int i = 0; i < n; i++) {
-        // Si le CPU est inactif jusqu'à l'arrivée du processus
-        if (temps_actuel < p[i].temps_arrivee) {
-            temps_actuel = p[i].temps_arrivee;
+        if (temps_actuel < copie[i].temps_arrivee) {
+            temps_actuel = copie[i].temps_arrivee;
         }
 
-        temps_actuel += p[i].duree_exec;
-        p[i].temps_fin = temps_actuel;
-        p[i].temps_rotation = p[i].temps_fin - p[i].temps_arrivee;
+        temps_actuel += copie[i].duree_exec;
+        copie[i].temps_fin = temps_actuel;
+        copie[i].temps_rotation = copie[i].temps_fin - copie[i].temps_arrivee;
 
-        printf("Processus P%d -> Temps d'arrivee: %d | Execution: %d | Temps de fin: %d | Temps de rotation: %d\n",
-               p[i].id, p[i].temps_arrivee, p[i].duree_exec, p[i].temps_fin, p[i].temps_rotation);
+        printf("Processus P%d -> Arrivee: %d | Execution: %d | Fin: %d | Rotation: %d\n",
+               copie[i].id, copie[i].temps_arrivee, copie[i].duree_exec, copie[i].temps_fin, copie[i].temps_rotation);
+    }
+}
+
+// Implémentation de l'algorithme SGF (Non préemptif)
+void executerSGF(Processus p[], int n) {
+    int temps_actuel = 0;
+    int completes = 0;
+    int est_termine[n];
+    for (int i = 0; i < n; i++) est_termine[i] = 0;
+
+    printf("\n--- EXECUTION DE L'ALGORITHME SGF ---\n");
+    while (completes < n) {
+        int idx_court = -1;
+        int min_duree = 99999;
+
+        // Trouver le processus arrivé ayant la plus petite durée d'exécution
+        for (int i = 0; i < n; i++) {
+            if (!est_termine[i] && p[i].temps_arrivee <= temps_actuel) {
+                if (p[i].duree_exec < min_duree) {
+                    min_duree = p[i].duree_exec;
+                    idx_court = i;
+                }
+            }
+        }
+
+        // Si aucun processus n'est encore arrivé, on avance le temps d'une unité
+        if (idx_court == -1) {
+            temps_actuel++;
+        } else {
+            temps_actuel += p[idx_court].duree_exec;
+            p[idx_court].temps_fin = temps_actuel;
+            p[idx_court].temps_rotation = p[idx_court].temps_fin - p[idx_court].temps_arrivee;
+            est_termine[idx_court] = 1;
+            completes++;
+
+            printf("Processus P%d -> Arrivee: %d | Execution: %d | Fin: %d | Rotation: %d\n",
+                   p[idx_court].id, p[idx_court].temps_arrivee, p[idx_court].duree_exec, p[idx_court].temps_fin, p[idx_court].temps_rotation);
+        }
     }
 }
 
@@ -68,8 +109,9 @@ int main() {
         scanf("%d", &p[i].duree_exec);
     }
 
-    // Appel de l'algorithme FIFO
+    // Exécution des algorithmes
     executerFIFO(p, n);
+    executerSGF(p, n);
 
     return 0;
 }
