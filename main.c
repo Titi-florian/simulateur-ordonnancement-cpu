@@ -132,6 +132,53 @@ void executerSRP(Processus p[], int n) {
     }
 }
 
+// Implémentation de l'algorithme Round Robin
+void executerRoundRobin(Processus p[], int n, int quantum) {
+    int temps_restant[n];
+    int temps_attente[n];
+    for (int i = 0; i < n; i++) {
+        temps_restant[i] = p[i].duree_exec;
+        temps_attente[i] = 0;
+    }
+
+    int temps_actuel = 0;
+    int completes = 0;
+
+    printf("\n--- EXECUTION DE L'ALGORITHME ROUND ROBIN (Quantum = %d) ---\n", quantum);
+
+    // Boucle tant qu'il reste des processus non terminés
+    while (completes < n) {
+        int tous_inactifs = 1;
+
+        for (int i = 0; i < n; i++) {
+            if (temps_restant[i] > 0 && p[i].temps_arrivee <= temps_actuel) {
+                tous_inactifs = 0;
+
+                if (temps_restant[i] > quantum) {
+                    // Le processus s'exécute pendant un quantum complet
+                    temps_actuel += quantum;
+                    temps_restant[i] -= quantum;
+                } else {
+                    // C'est la dernière tranche pour ce processus
+                    temps_actuel += temps_restant[i];
+                    p[i].temps_fin = temps_actuel;
+                    p[i].temps_rotation = p[i].temps_fin - p[i].temps_arrivee;
+                    temps_restant[i] = 0;
+                    completes++;
+
+                    printf("Processus P%d -> Arrivee: %d | Execution: %d | Fin: %d | Rotation: %d\n",
+                           p[i].id, p[i].temps_arrivee, p[i].duree_exec, p[i].temps_fin, p[i].temps_rotation);
+                }
+            }
+        }
+
+        // Si aucun processus n'est prêt à ce temps précis, on avance le temps d'une unité
+        if (tous_inactifs) {
+            temps_actuel++;
+        }
+    }
+}
+
 int main() {
     int n, quantum;
 
@@ -159,6 +206,7 @@ int main() {
     executerFIFO(p, n);
     executerSGF(p, n);
     executerSRP(p, n);
+    executerRoundRobin(p, n, quantum);
 
     return 0;
 }
